@@ -5,18 +5,33 @@
 
   <meta charset="UTF-8">
 
-  <meta name="viewport"
-        content="width=device-width,
-        initial-scale=1.0,
-        maximum-scale=1.0,
-        user-scalable=no">
+  <!-- ==========================================
+       CONFIGURACIÓN PARA IPHONE / PWA
+  =========================================== -->
+
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
+
+  <meta
+    name="viewport"
+    content="
+      width=device-width,
+      initial-scale=1.0,
+      maximum-scale=1.0,
+      user-scalable=no,
+      viewport-fit=cover
+    "
+  >
 
   <title>Visor VR 360°</title>
+
 
   <style>
 
     * {
       box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
     }
 
     html,
@@ -30,12 +45,32 @@
 
       overflow: hidden;
 
-      background: black;
+      background: #000;
 
       font-family: Arial, sans-serif;
 
+      touch-action: none;
+
+      overscroll-behavior: none;
     }
 
+
+    body {
+
+      position: fixed;
+
+      top: 0;
+      left: 0;
+
+      width: 100vw;
+      height: 100vh;
+
+    }
+
+
+    /* ==========================================
+       CANVAS THREE.JS
+    =========================================== */
 
     canvas {
 
@@ -56,7 +91,7 @@
 
     /* ==========================================
        MÁSCARA VR
-    ========================================== */
+    =========================================== */
 
     #vr-mask {
 
@@ -75,11 +110,6 @@
     }
 
 
-    /*
-       Cada mitad corresponde
-       a uno de los ojos.
-    */
-
     .eye-mask {
 
       position: absolute;
@@ -94,27 +124,19 @@
     }
 
 
-    /* MITAD IZQUIERDA */
-
     #eye-left {
-
       left: 0;
-
     }
 
 
-    /* MITAD DERECHA */
-
     #eye-right {
-
       right: 0;
-
     }
 
 
     /* ==========================================
-       FORMA CIRCULAR DE LOS LENTES
-    ========================================== */
+       CÍRCULOS VR
+    =========================================== */
 
     .eye-mask::after {
 
@@ -125,7 +147,7 @@
       top: 50%;
 
       /*
-         Tamaño del círculo.
+        Tamaño de cada círculo.
       */
 
       width: min(48vw, 92vh);
@@ -136,52 +158,53 @@
       border-radius: 50%;
 
       /*
-         Todo lo que está fuera
-         del círculo queda negro.
+        Oscurece todo lo que está
+        fuera del círculo.
       */
 
       box-shadow:
-        0 0 0 200vmax black;
+        0 0 0 200vmax #000;
 
     }
 
 
-    /* ==========================================
-       OJO IZQUIERDO
+    /*
+      CÍRCULOS JUNTOS.
 
-       Lo pegamos al centro.
-    ========================================== */
+      Si quieres juntarlos todavía más,
+      aumenta 3px.
+
+      Ejemplo:
+      5px
+      8px
+      10px
+    */
 
     #eye-left::after {
-
       right: -6px;
-
     }
 
 
-    /* ==========================================
-       OJO DERECHO
-
-       Lo pegamos al centro.
-    ========================================== */
-
     #eye-right::after {
-
       left: -6px;
-
     }
 
 
     /* ==========================================
        BOTÓN INICIAR VR
-    ========================================== */
+    =========================================== */
 
     #start-btn {
 
       position: fixed;
 
       left: 50%;
-      bottom: 20px;
+
+      bottom:
+        calc(
+          20px +
+          env(safe-area-inset-bottom)
+        );
 
       transform:
         translateX(-50%);
@@ -197,7 +220,7 @@
 
       background: #28a745;
 
-      color: white;
+      color: #fff;
 
       font-size: 16px;
 
@@ -207,7 +230,7 @@
 
       box-shadow:
         0 4px 15px
-        rgba(0,0,0,0.8);
+        rgba(0,0,0,.8);
 
       white-space: nowrap;
 
@@ -215,14 +238,19 @@
 
 
     /* ==========================================
-       MENSAJE SUPERIOR
-    ========================================== */
+       MENSAJE
+    =========================================== */
 
     #mensaje {
 
       position: fixed;
 
-      top: 15px;
+      top:
+        calc(
+          15px +
+          env(safe-area-inset-top)
+        );
+
       left: 50%;
 
       transform:
@@ -236,9 +264,9 @@
       border-radius: 20px;
 
       background:
-        rgba(0,0,0,0.7);
+        rgba(0,0,0,.7);
 
-      color: white;
+      color: #fff;
 
       font-size: 14px;
 
@@ -246,12 +274,14 @@
 
       white-space: nowrap;
 
+      pointer-events: none;
+
     }
 
 
     /* ==========================================
        CELULAR HORIZONTAL
-    ========================================== */
+    =========================================== */
 
     @media (orientation: landscape) {
 
@@ -270,7 +300,7 @@
 
     /* ==========================================
        CELULAR VERTICAL
-    ========================================== */
+    =========================================== */
 
     @media (orientation: portrait) {
 
@@ -286,18 +316,14 @@
   </style>
 
 
-  <!-- ==========================================
-       THREE.JS
-  ========================================== -->
+  <!-- THREE.JS -->
 
   <script
     src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js">
   </script>
 
 
-  <!-- ==========================================
-       STEREO EFFECT
-  ========================================== -->
+  <!-- STEREO EFFECT -->
 
   <script
     src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/effects/StereoEffect.js">
@@ -310,8 +336,8 @@
 
 
   <!-- ==========================================
-       MÁSCARA DE LOS DOS LENTES
-  ========================================== -->
+       DOS CÍRCULOS VR
+  =========================================== -->
 
   <div id="vr-mask">
 
@@ -328,42 +354,30 @@
   </div>
 
 
-  <!-- ==========================================
-       MENSAJE
-  ========================================== -->
+  <!-- MENSAJE -->
 
   <div id="mensaje">
-
     🥽 Visor VR 360°
-
   </div>
 
 
-  <!-- ==========================================
-       BOTÓN
-  ========================================== -->
+  <!-- BOTÓN -->
 
   <button id="start-btn">
-
     📱 Iniciar VR
-
   </button>
 
 
-<script>
 
+<script>
 
 /* =====================================================
    COMPROBAR THREE.JS
 ===================================================== */
 
-if (
-  typeof THREE === "undefined"
-) {
+if (typeof THREE === "undefined") {
 
-  alert(
-    "No se pudo cargar Three.js"
-  );
+  alert("No se pudo cargar Three.js");
 
   throw new Error(
     "THREE no está disponible"
@@ -377,13 +391,11 @@ if (
 ===================================================== */
 
 const scene =
-new THREE.Scene();
+  new THREE.Scene();
 
 
 scene.background =
-new THREE.Color(
-  0x000000
-);
+  new THREE.Color(0x000000);
 
 
 /* =====================================================
@@ -391,18 +403,18 @@ new THREE.Color(
 ===================================================== */
 
 const camera =
-new THREE.PerspectiveCamera(
+  new THREE.PerspectiveCamera(
 
-  90,
+    90,
 
-  window.innerWidth /
-  window.innerHeight,
+    window.innerWidth /
+    window.innerHeight,
 
-  0.1,
+    0.1,
 
-  1000
+    1000
 
-);
+  );
 
 
 camera.position.set(
@@ -413,25 +425,22 @@ camera.position.set(
 
 
 /* =====================================================
-   RENDERIZADOR
+   RENDER
 ===================================================== */
 
 const renderer =
-new THREE.WebGLRenderer({
+  new THREE.WebGLRenderer({
 
-  antialias: true
+    antialias: true
 
-});
+  });
 
 
 renderer.setPixelRatio(
 
   Math.min(
-
     window.devicePixelRatio,
-
     2
-
   )
 
 );
@@ -440,58 +449,47 @@ renderer.setPixelRatio(
 renderer.setSize(
 
   window.innerWidth,
-
   window.innerHeight
 
 );
 
 
 renderer.setClearColor(
-
   0x000000,
-
   1
-
 );
 
 
 document.body.appendChild(
-
   renderer.domElement
-
 );
 
 
 /* =====================================================
-   EFECTO ESTEREOSCÓPICO
+   EFECTO ESTÉREO
 ===================================================== */
 
 const effect =
-new THREE.StereoEffect(
-  renderer
-);
+  new THREE.StereoEffect(
+    renderer
+  );
 
 
 effect.setSize(
 
   window.innerWidth,
-
   window.innerHeight
 
 );
 
 
 /* =====================================================
-   CARGADOR DE IMÁGENES
+   CARGAR IMÁGENES
 ===================================================== */
 
 const loader =
-new THREE.TextureLoader();
+  new THREE.TextureLoader();
 
-
-/* =====================================================
-   FUNCIÓN PARA CARGAR IMÁGENES
-===================================================== */
 
 function cargarImagen(
   ruta,
@@ -502,7 +500,7 @@ function cargarImagen(
 
     ruta,
 
-    function() {
+    function () {
 
       console.log(
         "Imagen cargada:",
@@ -513,7 +511,7 @@ function cargarImagen(
 
     undefined,
 
-    function(error) {
+    function (error) {
 
       console.error(
         "Error cargando:",
@@ -529,80 +527,49 @@ function cargarImagen(
 
 
 /* =====================================================
-   CARGAR TUS 6 IMÁGENES
+   6 CARAS
 ===================================================== */
 
-
-/* DERECHA */
-
 const texturaPosX =
-cargarImagen(
+  cargarImagen(
+    "fotos/posx.png",
+    "Derecha"
+  );
 
-  "fotos/posx.png",
-
-  "Derecha"
-
-);
-
-
-/* IZQUIERDA */
 
 const texturaNegX =
-cargarImagen(
+  cargarImagen(
+    "fotos/negx.png",
+    "Izquierda"
+  );
 
-  "fotos/negx.png",
-
-  "Izquierda"
-
-);
-
-
-/* ARRIBA */
 
 const texturaPosY =
-cargarImagen(
+  cargarImagen(
+    "fotos/posy.png",
+    "Arriba"
+  );
 
-  "fotos/posy.png",
-
-  "Arriba"
-
-);
-
-
-/* ABAJO */
 
 const texturaNegY =
-cargarImagen(
+  cargarImagen(
+    "fotos/negy.png",
+    "Abajo"
+  );
 
-  "fotos/negy.png",
-
-  "Abajo"
-
-);
-
-
-/* FRENTE */
 
 const texturaPosZ =
-cargarImagen(
+  cargarImagen(
+    "fotos/posz.png",
+    "Frente"
+  );
 
-  "fotos/posz.png",
-
-  "Frente"
-
-);
-
-
-/* ATRÁS */
 
 const texturaNegZ =
-cargarImagen(
-
-  "fotos/negz.png",
-
-  "Atrás"
-
-);
+  cargarImagen(
+    "fotos/negz.png",
+    "Atrás"
+  );
 
 
 /* =====================================================
@@ -611,110 +578,56 @@ cargarImagen(
 
 const materials = [
 
-  /* DERECHA */
-
   new THREE.MeshBasicMaterial({
-
-    map:
-      texturaPosX,
-
-    side:
-      THREE.BackSide
-
+    map: texturaPosX,
+    side: THREE.BackSide
   }),
 
-
-  /* IZQUIERDA */
-
   new THREE.MeshBasicMaterial({
-
-    map:
-      texturaNegX,
-
-    side:
-      THREE.BackSide
-
+    map: texturaNegX,
+    side: THREE.BackSide
   }),
 
-
-  /* ARRIBA */
-
   new THREE.MeshBasicMaterial({
-
-    map:
-      texturaPosY,
-
-    side:
-      THREE.BackSide
-
+    map: texturaPosY,
+    side: THREE.BackSide
   }),
 
-
-  /* ABAJO */
-
   new THREE.MeshBasicMaterial({
-
-    map:
-      texturaNegY,
-
-    side:
-      THREE.BackSide
-
+    map: texturaNegY,
+    side: THREE.BackSide
   }),
 
-
-  /* FRENTE */
-
   new THREE.MeshBasicMaterial({
-
-    map:
-      texturaPosZ,
-
-    side:
-      THREE.BackSide
-
+    map: texturaPosZ,
+    side: THREE.BackSide
   }),
 
-
-  /* ATRÁS */
-
   new THREE.MeshBasicMaterial({
-
-    map:
-      texturaNegZ,
-
-    side:
-      THREE.BackSide
-
+    map: texturaNegZ,
+    side: THREE.BackSide
   })
 
 ];
 
 
 /* =====================================================
-   CREAR CUBO 360°
+   CUBO 360
 ===================================================== */
 
 const geometry =
-new THREE.BoxGeometry(
-
-  100,
-
-  100,
-
-  100
-
-);
+  new THREE.BoxGeometry(
+    100,
+    100,
+    100
+  );
 
 
 const skybox =
-new THREE.Mesh(
-
-  geometry,
-
-  materials
-
-);
+  new THREE.Mesh(
+    geometry,
+    materials
+  );
 
 
 scene.add(
@@ -723,40 +636,17 @@ scene.add(
 
 
 /* =====================================================
-   VARIABLES MOUSE
+   CONTROL CON MOUSE
 ===================================================== */
 
-let mouseDown =
-false;
+let mouseDown = false;
 
+let previousX = 0;
+let previousY = 0;
 
-let previousX =
-0;
+let yaw = 0;
+let pitch = 0;
 
-
-let previousY =
-0;
-
-
-let yaw =
-0;
-
-
-let pitch =
-0;
-
-
-/* =====================================================
-   VARIABLES GIROSCOPIO
-===================================================== */
-
-let gyroActive =
-false;
-
-
-/* =====================================================
-   MOUSE PRESIONADO
-===================================================== */
 
 document.addEventListener(
 
@@ -764,22 +654,14 @@ document.addEventListener(
 
   function(event) {
 
-    if (
-      gyroActive
-    ) {
-
+    if (gyroActive) {
       return;
-
     }
 
-
-    mouseDown =
-      true;
-
+    mouseDown = true;
 
     previousX =
       event.clientX;
-
 
     previousY =
       event.clientY;
@@ -789,27 +671,18 @@ document.addEventListener(
 );
 
 
-/* =====================================================
-   SOLTAR MOUSE
-===================================================== */
-
 document.addEventListener(
 
   "mouseup",
 
   function() {
 
-    mouseDown =
-      false;
+    mouseDown = false;
 
   }
 
 );
 
-
-/* =====================================================
-   MOVER MOUSE
-===================================================== */
 
 document.addEventListener(
 
@@ -818,13 +691,8 @@ document.addEventListener(
   function(event) {
 
     if (
-
-      !mouseDown
-
-      ||
-
+      !mouseDown ||
       gyroActive
-
     ) {
 
       return;
@@ -833,49 +701,31 @@ document.addEventListener(
 
 
     const deltaX =
-
       event.clientX -
-
       previousX;
 
 
     const deltaY =
-
       event.clientY -
-
       previousY;
 
 
     yaw -=
-
-      deltaX *
-
-      0.005;
+      deltaX * 0.005;
 
 
     pitch -=
+      deltaY * 0.005;
 
-      deltaY *
-
-      0.005;
-
-
-    /*
-       Limitar movimiento vertical
-    */
 
     pitch =
-
       Math.max(
 
         -Math.PI / 2,
 
         Math.min(
-
           Math.PI / 2,
-
           pitch
-
         )
 
       );
@@ -894,15 +744,11 @@ document.addEventListener(
 
 
 /* =====================================================
-   TOUCH EN CELULAR
+   CONTROL TÁCTIL
 ===================================================== */
 
-let touchX =
-0;
-
-
-let touchY =
-0;
+let touchX = 0;
+let touchY = 0;
 
 
 document.addEventListener(
@@ -912,13 +758,8 @@ document.addEventListener(
   function(event) {
 
     if (
-
-      gyroActive
-
-      ||
-
+      gyroActive ||
       event.touches.length === 0
-
     ) {
 
       return;
@@ -942,10 +783,6 @@ document.addEventListener(
 );
 
 
-/* =====================================================
-   MOVER CON DEDO
-===================================================== */
-
 document.addEventListener(
 
   "touchmove",
@@ -953,13 +790,8 @@ document.addEventListener(
   function(event) {
 
     if (
-
-      gyroActive
-
-      ||
-
+      gyroActive ||
       event.touches.length === 0
-
     ) {
 
       return;
@@ -976,42 +808,30 @@ document.addEventListener(
 
 
     yaw -=
-
       (x - touchX) *
-
       0.005;
 
 
     pitch -=
-
       (y - touchY) *
-
       0.005;
 
 
     pitch =
-
       Math.max(
 
         -Math.PI / 2,
 
         Math.min(
-
           Math.PI / 2,
-
           pitch
-
         )
 
       );
 
 
-    touchX =
-      x;
-
-
-    touchY =
-      y;
+    touchX = x;
+    touchY = y;
 
   },
 
@@ -1023,46 +843,45 @@ document.addEventListener(
 
 
 /* =====================================================
-   GIROSCOPIO
+   GIROSCOPIO IPHONE / ANDROID
 ===================================================== */
 
+let gyroActive = false;
+
+
 const deviceEuler =
-new THREE.Euler();
+  new THREE.Euler();
 
 
 const deviceQuaternion =
-new THREE.Quaternion();
+  new THREE.Quaternion();
 
 
 const screenQuaternion =
-new THREE.Quaternion();
+  new THREE.Quaternion();
 
 
 const worldQuaternion =
-new THREE.Quaternion(
+  new THREE.Quaternion(
 
-  -Math.sqrt(0.5),
+    -Math.sqrt(0.5),
 
-  0,
+    0,
 
-  0,
+    0,
 
-  Math.sqrt(0.5)
+    Math.sqrt(0.5)
 
-);
+  );
 
 
 const zee =
-new THREE.Vector3(
-  0,
-  0,
-  1
-);
+  new THREE.Vector3(
+    0,
+    0,
+    1
+  );
 
-
-/* =====================================================
-   CONVERTIR MOVIMIENTO DEL CELULAR
-===================================================== */
 
 function setObjectQuaternion(
 
@@ -1077,7 +896,6 @@ function setObjectQuaternion(
   orient
 
 ) {
-
 
   deviceEuler.set(
 
@@ -1106,11 +924,8 @@ function setObjectQuaternion(
 
     screenQuaternion
       .setFromAxisAngle(
-
         zee,
-
         -orient
-
       )
 
   );
@@ -1119,24 +934,17 @@ function setObjectQuaternion(
 
 
 /* =====================================================
-   LEER GIROSCOPIO
+   RECIBIR MOVIMIENTO DEL TELÉFONO
 ===================================================== */
 
 function onDeviceOrientation(
   event
 ) {
 
-
   if (
 
-    event.alpha === null
-
-    &&
-
-    event.beta === null
-
-    &&
-
+    event.alpha === null &&
+    event.beta === null &&
     event.gamma === null
 
   ) {
@@ -1146,96 +954,70 @@ function onDeviceOrientation(
   }
 
 
-  gyroActive =
-    true;
+  gyroActive = true;
 
 
   const alpha =
 
     event.alpha !== null
 
-    ?
+      ? THREE.MathUtils.degToRad(
+          event.alpha
+        )
 
-    THREE.MathUtils.degToRad(
-      event.alpha
-    )
-
-    :
-
-    0;
+      : 0;
 
 
   const beta =
 
     event.beta !== null
 
-    ?
+      ? THREE.MathUtils.degToRad(
+          event.beta
+        )
 
-    THREE.MathUtils.degToRad(
-      event.beta
-    )
-
-    :
-
-    0;
+      : 0;
 
 
   const gamma =
 
     event.gamma !== null
 
-    ?
+      ? THREE.MathUtils.degToRad(
+          event.gamma
+        )
 
-    THREE.MathUtils.degToRad(
-      event.gamma
-    )
-
-    :
-
-    0;
+      : 0;
 
 
-  let orientation =
-    0;
+  let orientation = 0;
 
 
   if (
 
-    screen.orientation
-
-    &&
-
+    screen.orientation &&
     typeof screen.orientation.angle
-    === "number"
+      === "number"
 
   ) {
 
-
     orientation =
-
       THREE.MathUtils.degToRad(
-
         screen.orientation.angle
-
       );
 
   }
 
-
   else if (
 
     typeof window.orientation
-    === "number"
+      === "number"
 
   ) {
 
-
     orientation =
-
       THREE.MathUtils.degToRad(
-
         window.orientation
-
       );
 
   }
@@ -1246,9 +1028,7 @@ function onDeviceOrientation(
     deviceQuaternion,
 
     alpha,
-
     beta,
-
     gamma,
 
     orientation
@@ -1264,168 +1044,10 @@ function onDeviceOrientation(
 
 
 /* =====================================================
-   BOTÓN INICIAR VR
-===================================================== */
-
-const btn =
-document.getElementById(
-  "start-btn"
-);
-
-
-const mensaje =
-document.getElementById(
-  "mensaje"
-);
-
-
-btn.addEventListener(
-
-  "click",
-
-  async function() {
-
-
-    /* ============================
-       IPHONE / IPAD
-    ============================ */
-
-    if (
-
-      typeof DeviceOrientationEvent
-      !== "undefined"
-
-      &&
-
-      typeof DeviceOrientationEvent
-        .requestPermission
-      === "function"
-
-    ) {
-
-
-      try {
-
-
-        const permission =
-
-          await DeviceOrientationEvent
-            .requestPermission();
-
-
-        if (
-
-          permission ===
-          "granted"
-
-        ) {
-
-
-          activarGiroscopio();
-
-
-        }
-
-
-        else {
-
-
-          alert(
-
-            "Debes permitir el acceso al movimiento."
-
-          );
-
-
-          return;
-
-        }
-
-
-      }
-
-
-      catch(error) {
-
-
-        console.error(
-          error
-        );
-
-
-        alert(
-
-          "No se pudo activar el giroscopio."
-
-        );
-
-
-        return;
-
-      }
-
-    }
-
-
-    /* ============================
-       ANDROID
-    ============================ */
-
-    else {
-
-
-      activarGiroscopio();
-
-    }
-
-
-    /* ============================
-       PANTALLA COMPLETA
-    ============================ */
-
-    try {
-
-
-      if (
-
-        document.documentElement
-          .requestFullscreen
-
-      ) {
-
-
-        await document
-          .documentElement
-          .requestFullscreen();
-
-      }
-
-
-    }
-
-
-    catch(error) {
-
-
-      console.log(
-
-        "Pantalla completa no disponible"
-
-      );
-
-    }
-
-  }
-
-);
-
-
-/* =====================================================
    ACTIVAR GIROSCOPIO
 ===================================================== */
 
 function activarGiroscopio() {
-
 
   window.addEventListener(
 
@@ -1438,26 +1060,20 @@ function activarGiroscopio() {
   );
 
 
-  btn.style.display =
-    "none";
-
-
   mensaje.innerHTML =
-
-    "🥽 Mueve el celular para mirar alrededor";
+    "🥽 Mueve el teléfono";
 
 
   setTimeout(
 
     function() {
 
-
       mensaje.style.display =
         "none";
 
     },
 
-    2500
+    2000
 
   );
 
@@ -1465,21 +1081,157 @@ function activarGiroscopio() {
 
 
 /* =====================================================
+   BOTÓN INICIAR VR
+===================================================== */
+
+const btn =
+  document.getElementById(
+    "start-btn"
+  );
+
+
+const mensaje =
+  document.getElementById(
+    "mensaje"
+  );
+
+
+btn.addEventListener(
+
+  "click",
+
+  async function() {
+
+
+    /* ==========================================
+       PERMISO IPHONE
+    =========================================== */
+
+    if (
+
+      typeof DeviceOrientationEvent
+        !== "undefined"
+
+      &&
+
+      typeof DeviceOrientationEvent
+        .requestPermission
+        === "function"
+
+    ) {
+
+      try {
+
+        const permiso =
+
+          await DeviceOrientationEvent
+            .requestPermission();
+
+
+        if (
+          permiso === "granted"
+        ) {
+
+          activarGiroscopio();
+
+        }
+
+        else {
+
+          alert(
+            "Debes permitir el acceso al movimiento y orientación."
+          );
+
+          return;
+
+        }
+
+      }
+
+      catch(error) {
+
+        console.error(error);
+
+        alert(
+          "No se pudo activar el movimiento del iPhone."
+        );
+
+        return;
+
+      }
+
+    }
+
+    else {
+
+      activarGiroscopio();
+
+    }
+
+
+    /* ==========================================
+       INTENTAR PANTALLA COMPLETA
+    =========================================== */
+
+    try {
+
+      const elemento =
+        document.documentElement;
+
+
+      if (
+        elemento.requestFullscreen
+      ) {
+
+        await elemento
+          .requestFullscreen();
+
+      }
+
+      else if (
+        elemento.webkitRequestFullscreen
+      ) {
+
+        await elemento
+          .webkitRequestFullscreen();
+
+      }
+
+    }
+
+    catch(error) {
+
+      console.log(
+        "Fullscreen no disponible en este navegador."
+      );
+
+    }
+
+
+    /* OCULTAR BOTÓN */
+
+    btn.style.display =
+      "none";
+
+  }
+
+);
+
+
+/* =====================================================
    ROTACIÓN CON MOUSE
 ===================================================== */
 
 const mouseEuler =
-new THREE.Euler(
+  new THREE.Euler(
 
-  0,
+    0,
+    0,
+    0,
 
-  0,
+    "YXZ"
 
-  0,
-
-  "YXZ"
-
-);
+  );
 
 
 /* =====================================================
@@ -1488,27 +1240,17 @@ new THREE.Euler(
 
 function animate() {
 
-
   requestAnimationFrame(
     animate
   );
 
 
-  /*
-     COMPUTADORA
-  */
-
-  if (
-    !gyroActive
-  ) {
-
+  if (!gyroActive) {
 
     mouseEuler.set(
 
       pitch,
-
       yaw,
-
       0,
 
       "YXZ"
@@ -1518,24 +1260,15 @@ function animate() {
 
     camera.quaternion
       .setFromEuler(
-
         mouseEuler
-
       );
 
   }
 
 
-  /*
-     DOS VISTAS VR
-  */
-
   effect.render(
-
     scene,
-
     camera
-
   );
 
 }
@@ -1545,37 +1278,35 @@ animate();
 
 
 /* =====================================================
-   AJUSTAR TAMAÑO
+   AJUSTAR PANTALLA
 ===================================================== */
 
 function ajustarPantalla() {
 
+  const ancho =
+    window.innerWidth;
+
+
+  const alto =
+    window.innerHeight;
+
 
   camera.aspect =
-
-    window.innerWidth /
-
-    window.innerHeight;
+    ancho / alto;
 
 
   camera.updateProjectionMatrix();
 
 
   renderer.setSize(
-
-    window.innerWidth,
-
-    window.innerHeight
-
+    ancho,
+    alto
   );
 
 
   effect.setSize(
-
-    window.innerWidth,
-
-    window.innerHeight
-
+    ancho,
+    alto
   );
 
 }
@@ -1590,28 +1321,43 @@ window.addEventListener(
 );
 
 
-/* =====================================================
-   CAMBIO DE ORIENTACIÓN DEL CELULAR
-===================================================== */
+window.addEventListener(
 
-if (
-  screen.orientation
-) {
+  "orientationchange",
 
+  function() {
+
+    setTimeout(
+      ajustarPantalla,
+      300
+    );
+
+  }
+
+);
+
+
+if (screen.orientation) {
 
   screen.orientation
     .addEventListener(
 
       "change",
 
-      ajustarPantalla
+      function() {
+
+        setTimeout(
+          ajustarPantalla,
+          300
+        );
+
+      }
 
     );
 
 }
 
 </script>
-
 
 </body>
 
